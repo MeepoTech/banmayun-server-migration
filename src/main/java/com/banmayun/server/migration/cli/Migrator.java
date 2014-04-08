@@ -49,7 +49,6 @@ public class Migrator {
     private Map<Long, Long> userIds = null;
     private Map<Long, Long> groupIds = null;
     private Map<Long, Long> metaIds = null;
-    private Map<Long, Long> versionIds = null;
     private Map<Long, Long> userRootIds = null;
     private Map<Long, Long> groupRootIds = null;
     private MigrationConfiguration config = null;
@@ -65,7 +64,6 @@ public class Migrator {
     private com.banmayun.server.migration.to.db.TrashDAO trashDAO = null;
     private com.banmayun.server.migration.to.db.CursorDAO cursorDAO = null;
     private com.banmayun.server.migration.to.db.ShareDAO shareDAO = null;
-    private com.banmayun.server.migration.to.db.CommentDAO commentDAO = null;
 
     public static final char[] TRUE_CHARS = new char[] { 'i', 'r', 'w', 'd', 'i', 'r', 'w', 'd' };
     public static final char FALSE_CHAR = '-';
@@ -83,12 +81,10 @@ public class Migrator {
         this.trashDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.TrashDAO.class);
         this.cursorDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.CursorDAO.class);
         this.shareDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.ShareDAO.class);
-        this.commentDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.CommentDAO.class);
 
         this.userIds = new HashMap<Long, Long>();
         this.groupIds = new HashMap<Long, Long>();
         this.metaIds = new HashMap<Long, Long>();
-        this.versionIds = new HashMap<Long, Long>();
         this.userRootIds = new HashMap<Long, Long>();
         this.groupRootIds = new HashMap<Long, Long>();
     }
