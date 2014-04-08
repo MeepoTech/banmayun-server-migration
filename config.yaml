@@ -1,0 +1,47 @@
+http:
+  port: 5001
+  adminPort: 5051
+  maxThreads: 1024
+  minThreads: 8
+
+logging:
+  level: DEBUG
+
+  loggers:
+    com.mchange: INFO
+
+  console:
+    enabled: true
+    threshold: DEBUG
+
+  file:
+    enabled: true
+    threshold: DEBUG
+    currentLogFilename: ./drive-server.log
+    archivedLogFilenamePattern: ./drive-server-%d.log.gz
+    archivedFileCount: 21
+
+fromDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  url: jdbc:postgresql://192.168.200.206/drive
+  maxWaitForConnection: 3s
+  minSize: 8
+  maxSize: 32
+  closeConnectionIfIdleFor: 1 minute
+  
+toDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  url: jdbc:postgresql://192.168.200.206/migrate
+  maxWaitForConnection: 3s
+  minSize: 8
+  maxSize: 64
+  closeConnectionIfIdleFor: 1 minute
+
+fromRoot: ./data
+toRoot: ./data
+migrateAccount: false
+migrateData: true
+groupDefaultPermission: irwdirw-
+

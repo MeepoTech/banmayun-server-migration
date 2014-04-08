@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+	<changeSet id="2.1" author="frog">
+		<sql>CREATE TYPE root_type AS ENUM ('USER', 'GROUP', 'APP')</sql>
+		<createTable tableName="roots">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="type" type="root_type">
+				<constraints nullable="false" />
+			</column>
+			<column name="quota" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="default_perm" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="file_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="byte_count" type="int8" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<sql>CREATE TYPE user_role AS ENUM ('USER', 'ADMIN', 'ROOT')</sql>
+		<createTable tableName="users">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="name" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="email" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="source" type="varchar" defaultValue="">
+				<constraints nullable="false" />
+			</column>
+			<column name="display_name" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="password_sha256" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="role" type="user_role">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_activated" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_blocked" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="groups_can_own" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="group_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="users" constraintName="fk_users_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="RESTRICT"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_users_root_id" tableName="users">
+			<column name="root_id" />
+		</createIndex>
+		<createIndex indexName="idx_users_name_source" tableName="users"
+			unique="true">
+			<column name="lower(name), lower(source)" />
+		</createIndex>
+		<createIndex indexName="idx_users_email_source" tableName="users"
+			unique="true">
+			<column name="lower(email), lower(source)" />
+		</createIndex>
+
+		<sql>CREATE TYPE group_type AS ENUM ('SYSTEM_PUBLIC', 'PUBLIC',
+			'PROTECTED', 'PRIVATE')
+		</sql>
+		<createTable tableName="groups">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="name" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="source" type="varchar" defaultValue="">
+				<constraints nullable="false" />
+			</column>
+			<column name="intro" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="tags" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="type" type="group_type">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_visible" type="boolean" defaultValue="TRUE">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_activated" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_blocked" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="announce" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_by" type="int8">
+				<constraints nullable="true" />
+			</column>
+			<column name="user_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="groups" constraintName="fk_groups_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="RESTRICT"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_groups_root_id" tableName="groups">
+			<column name="root_id" />
+		</createIndex>
+		<createIndex indexName="idx_group_name_source" tableName="groups"
+			unique="true">
+			<column name="lower(name), lower(source)" />
+		</createIndex>
+
+		<sql>CREATE TYPE relation_role AS ENUM ('MEMBER', 'ADMIN', 'OWNER')
+		</sql>
+		<createTable tableName="relations">
+			<column name="user_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="group_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="role" type="relation_role">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_activated" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_blocked" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="remarks" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="user_id, group_id"
+			constraintName="pk_relations" tableName="relations" />
+		<addForeignKeyConstraint baseColumnNames="user_id"
+			baseTableName="relations" constraintName="fk_relations_user_id"
+			referencedColumnNames="id" referencedTableName="users" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_relations_user_id" tableName="relations">
+			<column name="user_id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="group_id"
+			baseTableName="relations" constraintName="fk_relations_group_id"
+			referencedColumnNames="id" referencedTableName="groups" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_relations_group_id" tableName="relations">
+			<column name="group_id" />
+		</createIndex>
+
+		<createTable tableName="datas">
+			<column name="md5" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="bytes" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="location" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="ref_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="md5, bytes" constraintName="pk_datas"
+			tableName="datas" />
+
+		<createSequence sequenceName="metas_version_seq" />
+		<createTable tableName="metas">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="version" type="int8" defaultValueComputed="nextval('metas_version_seq')">
+				<constraints nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="path" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="nonce" type="int8" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="parent_path" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="name" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="is_dir" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="md5" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="bytes" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="perm" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="modified_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="modified_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="client_modified_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="comment_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="share_count" type="integer" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="md5, bytes"
+			baseTableName="metas" constraintName="fk_metas_md5_bytes"
+			referencedColumnNames="md5, bytes" referencedTableName="datas"
+			onDelete="CASCADE" onUpdate="RESTRICT" />
+		<createIndex indexName="idx_metas_md5_bytes" tableName="metas">
+			<column name="md5, bytes" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="metas" constraintName="fk_metas_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_metas_root_id" tableName="metas">
+			<column name="root_id" />
+		</createIndex>
+		<createIndex indexName="idx_metas_root_id_path_nonce"
+			tableName="metas" unique="true">
+			<column name="root_id, lower(path), nonce" />
+		</createIndex>
+		<createIndex indexName="idx_metas_root_id_parent_path_nonce"
+			tableName="metas">
+			<column name="root_id, lower(parent_path), nonce" />
+		</createIndex>
+		<createIndex indexName="idx_metas_root_id_path_vpo_nonce"
+			tableName="metas">
+			<column name="root_id, lower(path) varchar_pattern_ops, nonce" />
+		</createIndex>
+		<createIndex indexName="idx_metas_root_id_version_nonce"
+			tableName="metas">
+			<column name="root_id, version, nonce" />
+		</createIndex>
+		<createIndex indexName="idx_metas_nonce" tableName="metas">
+			<column name="nonce" />
+		</createIndex>
+
+		<createTable tableName="trashes">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="meta_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_deleted" type="boolean" defaultValue="FALSE">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="trashes" constraintName="fk_trashes_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_trashes_root_id" tableName="trashes">
+			<column name="root_id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="meta_id"
+			baseTableName="trashes" constraintName="fk_trashes_meta_id"
+			referencedColumnNames="id" referencedTableName="metas" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_trashes_meta_id" tableName="trashes"
+			unique="true">
+			<column name="meta_id" />
+		</createIndex>
+		<createIndex indexName="idx_trashes_created_at" tableName="trashes">
+			<column name="created_at" />
+		</createIndex>
+
+		<createTable tableName="revisions">
+			<column name="meta_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="version" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="md5" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="bytes" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="modified_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="modified_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="client_modified_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="meta_id, version"
+			constraintName="pk_revisions" tableName="revisions" />
+		<addForeignKeyConstraint baseColumnNames="meta_id"
+			baseTableName="revisions" constraintName="fk_revisions_meta_id"
+			referencedColumnNames="id" referencedTableName="metas" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_revisions_meta_id" tableName="revisions">
+			<column name="meta_id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="md5, bytes"
+			baseTableName="revisions" constraintName="fk_revisions_md5_bytes"
+			referencedColumnNames="md5, bytes" referencedTableName="datas"
+			onDelete="CASCADE" onUpdate="RESTRICT" />
+		<createIndex indexName="idx_revisions_md5_bytes"
+			tableName="revisions">
+			<column name="md5, bytes" />
+		</createIndex>
+		<createIndex indexName="idx_revisions_root_id_version"
+			tableName="revisions">
+			<column name="root_id, version" />
+		</createIndex>
+		<createIndex indexName="idx_revisions_modified_at"
+			tableName="revisions">
+			<column name="modified_at" />
+		</createIndex>
+
+		<createTable tableName="comments">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="meta_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="contents" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="comments" constraintName="fk_comments_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_comments_root_id" tableName="comments">
+			<column name="root_id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="meta_id"
+			baseTableName="comments" constraintName="fk_comments_meta_id"
+			referencedColumnNames="id" referencedTableName="metas" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_comments_meta_id" tableName="comments">
+			<column name="meta_id" />
+		</createIndex>
+
+		<createTable tableName="shares">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="meta_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="password_sha256" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="expires_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_by" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="shares" constraintName="fk_shares_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_shares_root_id" tableName="shares">
+			<column name="root_id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="meta_id"
+			baseTableName="shares" constraintName="fk_shares_meta_id"
+			referencedColumnNames="id" referencedTableName="metas" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_shares_meeta_id" tableName="shares">
+			<column name="meta_id" />
+		</createIndex>
+		<createIndex indexName="idx_shares_expires_at" tableName="shares">
+			<column name="expires_at" />
+		</createIndex>
+		<sql>CREATE TYPE link_category AS ENUM ('ACCESS',
+			'EMAIL_VERIFICATION',
+			'PASSWORD_RESET')
+		</sql>
+		<sql>CREATE TYPE link_device AS ENUM ('PC_WINDOWS', 'PC_MACOSX',
+			'PC_LINUX', 'PHONE_IOS', 'PHONE_ANDROID', 'PAD_IOS',
+			'PAD_ANDROID',
+			'WEB', 'UNKNOWN')
+		</sql>
+		<createTable tableName="links">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="user_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="token" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="category" type="link_category">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar">
+				<constraints nullable="false" />
+			</column>
+			<column name="device" type="link_device">
+				<constraints nullable="false" />
+			</column>
+			<column name="expires_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="user_id"
+			baseTableName="links" constraintName="fk_links_user_id"
+			referencedColumnNames="id" referencedTableName="users" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_links_user_id" tableName="links">
+			<column name="user_id" />
+		</createIndex>
+		<createIndex indexName="idx_links_token" tableName="links"
+			unique="true">
+			<column name="token" />
+		</createIndex>
+		<createIndex indexName="idx_link_expires_at" tableName="links">
+			<column name="expires_at" />
+		</createIndex>
+
+		<sql>CREATE TYPE stat_type AS ENUM ('USER_COUNT', 'GROUP_COUNT',
+			'FILE_COUNT', 'LINK_COUNT', 'BYTE_COUNT')
+		</sql>
+		<createTable tableName="stats">
+			<column name="type" type="stat_type">
+				<constraints nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="true" />
+			</column>
+			<column name="int_value" type="integer">
+				<constraints nullable="true" />
+			</column>
+			<column name="long_value" type="int8">
+				<constraints nullable="true" />
+			</column>
+			<column name="string_value" type="varchar">
+				<constraints nullable="true" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="stats" constraintName="fk_stats_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_stats_root_id" tableName="stats">
+			<column name="root_id" />
+		</createIndex>
+
+
+		<createTable tableName="cursors">
+			<column name="id" type="bigserial">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="root_id" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="version" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="pos" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="next_version" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="prev" type="int8">
+				<constraints nullable="true" />
+			</column>
+			<column name="created_at" type="timestamp">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="root_id"
+			baseTableName="cursors" constraintName="fk_cursors_root_id"
+			referencedColumnNames="id" referencedTableName="roots" onDelete="CASCADE"
+			onUpdate="CASCADE" />
+		<createIndex indexName="idx_cursor_root_version"
+			tableName="cursors">
+			<column name="root_id, version" />
+		</createIndex>
+		<createIndex indexName="idx_cursors_created" tableName="cursors">
+			<column name="created_at" />
+		</createIndex>
+	</changeSet>
+</databaseChangeLog>
