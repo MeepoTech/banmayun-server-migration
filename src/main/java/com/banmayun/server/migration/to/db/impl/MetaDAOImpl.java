@@ -91,7 +91,11 @@ public class MetaDAOImpl extends AbstractDAO implements MetaDAO {
         String name = PathUtils.getName(path);
         meta.setPath(path);
         // meta.setNonce(0L);
-        meta.setParentPath(parentPath);
+        if (!PathUtils.ROOT_PATH.equals(path)) {
+            meta.setParentPath(parentPath);
+        } else {
+            meta.setParentPath(null);
+        }
         meta.setName(name);
 
         String sql = String.format("INSERT INTO %1$s (%2$s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "

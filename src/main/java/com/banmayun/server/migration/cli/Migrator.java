@@ -274,7 +274,7 @@ public class Migrator {
         if (group.getStatus().equals(Group.Status.NOT_ACTIVATED)) {
             newGroup.setIsActivated(false);
         } else {
-            newGroup.setIsBlocked(true);
+            newGroup.setIsActivated(true);
         }
         newGroup.setUserCount(0);
         newGroup.setSource(group.getDomain().equalsIgnoreCase("local") ? com.banmayun.server.migration.to.core.Group.DEFAULT_SOURCE
