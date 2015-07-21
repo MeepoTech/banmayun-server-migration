@@ -79,6 +79,11 @@ public class SummaryStatisticDAO extends AbstractDAO {
         return parseSummaryStatistic(super.uniqueResult(sql, stat.getDate(), stat.getGroupCount(), stat.getUserCount(),
                 stat.getMetaCount(), stat.getfileCount(), stat.getBytes(), stat.getExtensionCount()));
     }
+    
+    public List<SummaryStatistic> list(int offset, int limit) throws SQLException {
+        String sql = "SELECT " + COLUMNS_SELECT + " FROM tbl_summary_statistic ss " + "ORDER BY ss.date OFFSET ? LIMIT ?";
+        return parseSummaryStatistics(super.list(sql, offset, limit));
+    }
 
     public SummaryStatistic updateOrCreate(SummaryStatistic stat) throws SQLException {
         SummaryStatistic groupStat = this.get(stat.getDate()).orNull();

@@ -17,6 +17,8 @@ import com.banmayun.server.migration.to.db.RevisionDAO;
 import com.banmayun.server.migration.to.db.RootDAO;
 import com.banmayun.server.migration.to.db.ShareDAO;
 import com.banmayun.server.migration.to.db.StatisticDAO;
+import com.banmayun.server.migration.to.db.StatisticGroupDAO;
+import com.banmayun.server.migration.to.db.StatisticSummaryDAO;
 import com.banmayun.server.migration.to.db.TrashDAO;
 import com.banmayun.server.migration.to.db.UserDAO;
 
@@ -58,6 +60,8 @@ public class DAOManager {
         this.instances.put(StatisticDAO.class, new StatisticDAOImpl(this.dataSource));
         this.instances.put(TrashDAO.class, new TrashDAOImpl(this.dataSource));
         this.instances.put(UserDAO.class, new UserDAOImpl(this.dataSource));
+        this.instances.put(StatisticGroupDAO.class, new StatisticGroupDAOImpl(this.dataSource));
+        this.instances.put(StatisticSummaryDAO.class, new StatisticSummaryDAOImpl(this.dataSource));
     }
 
     @SuppressWarnings("unchecked")

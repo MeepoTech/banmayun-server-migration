@@ -117,6 +117,11 @@ public class GroupStatisticDAO extends AbstractDAO {
             return this.update(stat.getGroupId(), stat).orNull();
         }
     }
+    
+    public List<GroupStatistic> list(int offset, int limit) throws SQLException {
+        String sql = "SELECT " + COLUMNS_SELECT + " FROM tbl_group_statistic gs " + "ORDER BY gs.group_id OFFSET ? LIMIT ?";
+        return parseGroupStatistics(super.list(sql, offset, limit));
+    }
 
     public GroupStatistic create(GroupStatistic stat) throws SQLException {
         String sql = "INSERT INTO tbl_group_statistic (" + COLUMNS_INSERT + ") " + "VALUES (?, ?, ?, ?, ?, ?, ?) "

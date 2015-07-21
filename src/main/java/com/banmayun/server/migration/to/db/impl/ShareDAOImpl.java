@@ -20,7 +20,7 @@ public class ShareDAOImpl extends AbstractDAO implements ShareDAO {
 
     protected static final String TABLE_NAME = "shares";
     protected static final String TABLE_ALIAS = "_share_";
-    protected static final String[] COLUMN_NAMES = new String[] { "id", "root_id", "meta_id", "password_sha256",
+    protected static final String[] COLUMN_NAMES = new String[] { "id", "root_id", "meta_id", "password",
             "expires_at", "created_at", "created_by" };
     protected static final String[] COLUMN_ALIASES;
     protected static final String COLUMNS_INSERT;
