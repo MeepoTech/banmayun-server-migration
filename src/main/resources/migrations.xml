@@ -604,16 +604,22 @@
 		<sql endDelimiter="\nGO" splitStatements="true" stripComments="true">insert
 			into roots (type, quota, default_perm, file_count, byte_count) values
 			('USER'::root_type, 214748364800, 'irwdirw-', 0, 0);
-			insert into users (name, email, source, display_name, password_sha256,
-			role, is_activated, is_blocked, groups_can_own, root_id, created_at,
+			insert into users
+			(name, email, source, display_name, password_sha256,
+			role,
+			is_activated, is_blocked, groups_can_own, root_id, created_at,
 			group_count) select 'root', 'yefeng@meepotech.com', '', 'Supervisor',
 			'00a9d757778a82bf08ce04e0828432ce5e09879169fb6b227401a6f596fd61b7',
 			'ROOT'::user_role, true, false, 10, r.id, now(), 0 from roots r order
 			by r.id desc limit 1;
-			insert into metas (root_id, path, nonce, parent_path, name, is_dir, md5,
-			bytes, created_at, created_by, modified_at, modified_by,
-			client_modified_at) select r.id, '', 0, null, '', true, null, 0,
-			now(), 1, now(), 1, now() from roots r order by r.id desc limit 1;
+			insert into metas (root_id, path, nonce,
+			parent_path, name, is_dir, md5,
+			bytes, created_at, created_by,
+			modified_at, modified_by,
+			client_modified_at) select r.id, '', 0,
+			null, '', true, null, 0,
+			now(), 1, now(), 1, now() from roots r order
+			by r.id desc limit 1;
 		</sql>
 	</changeSet>
 
@@ -736,13 +742,42 @@
 			</column>
 		</addColumn>
 	</changeSet>
-	
-		<changeSet id="2.4.1" author="qiuping">
+
+	<changeSet id="2.4.1" author="qiuping">
 		<addColumn tableName="groups">
 			<column name="is_promoted" type="boolean" defaultValue="false">
 				<constraints nullable="false" />
 			</column>
 		</addColumn>
+	</changeSet>
+
+	<changeSet id="2.4.2" author="qiuping">
+		<addColumn tableName="groups">
+			<column name="is_deleted" type="boolean" defaultValue="false">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+
+		<addColumn tableName="users">
+			<column name="is_deleted" type="boolean" defaultValue="false">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+
+		<dropIndex indexName="idx_users_name_source" tableName="users" />
+
+		<dropIndex indexName="idx_users_email_source" tableName="users" />
+
+		<dropIndex indexName="idx_group_name_source" tableName="groups" />
+
+		<sql endDelimiter="\nGO" splitStatements="true" stripComments="true">
+			create unique index idx_users_name_source on users(lower(name),
+			lower(source)) where is_deleted=false;
+			create unique index idx_users_email_source on users(lower(email),
+			lower(source)) where is_deleted=false;
+			create unique index idx_groups_name_source on groups(lower(name),
+			lower(source)) where is_deleted=false;
+		</sql>
 	</changeSet>
 
 </databaseChangeLog>

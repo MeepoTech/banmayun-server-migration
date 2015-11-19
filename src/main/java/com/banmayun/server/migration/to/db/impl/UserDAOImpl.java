@@ -25,7 +25,7 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
     protected static final String TABLE_ALIAS = "_user_";
     protected static final String[] COLUMN_NAMES = new String[] { "id", "name", "email", "source", "display_name",
             "password_sha256", "role", "is_activated", "is_blocked", "groups_can_own", "root_id", "created_at",
-            "group_count" };
+            "group_count", "is_deleted" };
     protected static final String[] COLUMN_ALIASES;
     protected static final String COLUMNS_INSERT;
     protected static final String COLUMNS_SELECT;
@@ -34,10 +34,10 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
     static {
         COLUMN_ALIASES = DAOUtils.getColumnAliases(TABLE_ALIAS, COLUMN_NAMES);
         COLUMNS_INSERT = DAOUtils.getColumnsInsert(TABLE_ALIAS,
-                ArrayUtils.subarray(COLUMN_NAMES, 1, COLUMN_NAMES.length - 1));
+                ArrayUtils.subarray(COLUMN_NAMES, 1, COLUMN_NAMES.length - 2));
         COLUMNS_SELECT = DAOUtils.getColumnsSelect(TABLE_ALIAS, COLUMN_NAMES);
         COLUMNS_UPDATE = StringUtils.replace(
-                DAOUtils.getColumnsUpdate(TABLE_ALIAS, ArrayUtils.subarray(COLUMN_NAMES, 1, COLUMN_NAMES.length - 1)),
+                DAOUtils.getColumnsUpdate(TABLE_ALIAS, ArrayUtils.subarray(COLUMN_NAMES, 1, COLUMN_NAMES.length - 2)),
                 "role=?", "role=?::user_role");
         COLUMNS_RETURN = DAOUtils.getColumnsReturn(TABLE_ALIAS, COLUMN_NAMES);
     }
@@ -60,6 +60,7 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
         ret.setRootId((Long) arg.get(COLUMN_ALIASES[10]));
         ret.setCreatedAt((Timestamp) arg.get(COLUMN_ALIASES[11]));
         ret.setGroupCount((Integer) arg.get(COLUMN_ALIASES[12]));
+        ret.setIsDeleted((Boolean) arg.get(COLUMN_ALIASES[13]));
         return ret;
     }
 
@@ -102,20 +103,20 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
             source = User.DEFAULT_SOURCE;
         }
         String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE lower(%2$s.name)=lower(?) "
-                + "AND lower(%2$s.source)=lower(?)", TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
+                + "AND lower(%2$s.source)=lower(?) AND %2$s.is_deleted=false", TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
         return Optional.fromNullable(parseUser(super.uniqueResult(sql, name, source)));
     }
 
     @Override
     public Optional<User> findUserByEmail(String email, String source) throws DAOException {
         String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE lower(%2$s.email)=lower(?) "
-                + "AND lower(%2$s.source)=lower(?)", TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
+                + "AND lower(%2$s.source)=lower(?) AND %2$s.is_deleted=false", TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
         return Optional.fromNullable(parseUser(super.uniqueResult(sql, email, source)));
     }
 
     @Override
     public Optional<User> findUserByRootId(long rootId) throws DAOException {
-        String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE %2$s.root_id=?", TABLE_NAME, TABLE_ALIAS,
+        String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE %2$s.root_id=? AND %2$s.is_deleted=false", TABLE_NAME, TABLE_ALIAS,
                 COLUMNS_SELECT);
         return Optional.fromNullable(parseUser(super.uniqueResult(sql, rootId)));
     }
@@ -128,6 +129,33 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
     }
 
     @Override
+    public Optional<User> deleteUser(long userId) throws DAOException {
+        String sql = String.format("DELETE FROM %1$s %2$s WHERE %2$s.id=? RETURNING %3$s", TABLE_NAME, TABLE_ALIAS,
+                COLUMNS_RETURN);
+        return Optional.fromNullable(parseUser(super.uniqueResult(sql, userId)));
+    }
+
+    @Override
+    public Optional<User> markUserAsDeleted(long userId) throws DAOException {
+        String sql = String.format("UPDATE %1$s %2$s SET is_deleted=true WHERE %2$s.id=? RETURNING %3$s",
+                TABLE_NAME, TABLE_ALIAS, COLUMNS_RETURN);
+        User deletedUser = parseUser(super.uniqueResult(sql, userId));
+
+        if (deletedUser != null) {
+            // decrement user_count for groups
+            sql = String.format("WITH tmp AS (SELECT %2$s.group_id FROM %1$s %2$s WHERE %2$s.user_id=?) "
+                    + "UPDATE %3$s %4$s SET user_count=%4$s.user_count-1 FROM tmp WHERE %4$s.id=tmp.group_id",
+                    RelationDAOImpl.TABLE_NAME, RelationDAOImpl.TABLE_ALIAS, GroupDAOImpl.TABLE_NAME, GroupDAOImpl.TABLE_ALIAS);
+            super.update(sql, userId);
+
+            // delete relations
+            sql = String.format("DELETE FROM %1$s %2$s WHERE %2$s.user_id=?", RelationDAOImpl.TABLE_NAME, RelationDAOImpl.TABLE_ALIAS);
+            super.update(sql, userId);
+        }
+        return Optional.fromNullable(deletedUser);
+    }
+
+    @Override
     public int countUsers() throws DAOException {
         String sql = String.format("SELECT COUNT(*) AS count FROM %1$s %2$s", TABLE_NAME, TABLE_ALIAS);
         Map<String, Object> ret = super.uniqueResult(sql);
@@ -135,25 +163,28 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
     }
 
     @Override
-    public int countUsers(UserRole role) throws DAOException {
-        String sql = String.format("SELECT COUNT(*) AS count WHERE %2$s.role=?::user_role FROM %1$s %2$s", TABLE_NAME,
-                TABLE_ALIAS);
-        Map<String, Object> ret = super.uniqueResult(sql, role.toString());
+    public int countUsers(UserRole role, Boolean isActivated, Boolean isBlocked) throws DAOException {
+        Pair<String, Object[]> sqlFormatAndArgs = this.getListSQLFormatAndArgs(
+                "SELECT COUNT(*) AS count FROM %1$s %2$s", role, isActivated, isBlocked);
+        String sql = String.format(sqlFormatAndArgs.getLeft(), TABLE_NAME, TABLE_ALIAS);
+        Map<String, Object> ret = super.uniqueResult(sql, sqlFormatAndArgs.getRight());
         return ((Long) ret.get("count")).intValue();
     }
 
     @Override
     public List<User> listUsers(int offset, int limit) throws DAOException {
-        String sql = String.format("SELECT %3$s FROM %1$s %2$s ORDER BY %2$s.id DESC OFFSET ? LIMIT ?", TABLE_NAME,
-                TABLE_ALIAS, COLUMNS_SELECT);
-        return parseUsers(super.list(sql, offset, limit));
+        return this.listUsers(null, null, null, offset, limit);
     }
 
     @Override
-    public List<User> listUsers(UserRole role, int offset, int limit) throws DAOException {
-        String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE %2$s.role=?::user_role "
-                + "ORDER BY %2$s.id DESC OFFSET ? LIMIT ?", TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
-        return parseUsers(super.list(sql, role.toString(), offset, limit));
+    public List<User> listUsers(UserRole role, Boolean isActivated, Boolean isBlocked, int offset, int limit)
+            throws DAOException {
+        Pair<String, Object[]> sqlFormatAndArgs = this.getListSQLFormatAndArgs("SELECT %3$s FROM %1$s %2$s", role,
+                isActivated, isBlocked);
+        String sql = String.format(sqlFormatAndArgs.getLeft() + " ORDER BY %2$s.id DESC OFFSET ? LIMIT ?", TABLE_NAME,
+                TABLE_ALIAS, COLUMNS_SELECT);
+        Object[] args = ArrayUtils.addAll(sqlFormatAndArgs.getRight(), offset, limit);
+        return parseUsers(super.list(sql, args));
     }
 
     @Override
@@ -187,5 +218,48 @@ public class UserDAOImpl extends AbstractDAO implements UserDAO {
                 user.getSource(), user.getDisplayName(), user.getPasswordSha256(), user.getRole().toString(),
                 user.getIsActivated(), user.getIsBlocked(), user.getGroupsCanOwn(), user.getRootId(),
                 user.getCreatedAt(), id)));
+    }
+
+    private Pair<String, Object[]> getListSQLFormatAndArgs(String sqlFormat, UserRole role, Boolean isActivated,
+            Boolean isBlocked) {
+        List<Object> args = new ArrayList<Object>(3);
+        boolean isWhere = true;
+        if (role != null) {
+            if (isWhere) {
+                sqlFormat += " WHERE %2$s.role=?::user_role";
+                isWhere = false;
+            } else {
+                sqlFormat += " AND %2$s.role=?::user_role";
+            }
+            args.add(role.toString());
+        }
+        if (isActivated != null) {
+            if (isWhere) {
+                sqlFormat += " WHERE %2$s.is_activated=?";
+                isWhere = false;
+            } else {
+                sqlFormat += " AND %2$s.is_activated=?";
+            }
+            args.add(isActivated);
+        }
+        if (isBlocked != null) {
+            if (isWhere) {
+                sqlFormat += " WHERE %2$s.is_blocked=?";
+                isWhere = false;
+            } else {
+                sqlFormat += " AND %2$s.is_blocked=?";
+            }
+            args.add(isBlocked);
+        }
+
+        if (isWhere) {
+            sqlFormat += " WHERE %2$s.is_deleted=?";
+            isWhere = false;
+        } else {
+            sqlFormat += " AND %2$s.is_deleted=?";
+        }
+        args.add(false);
+
+        return Pair.of(sqlFormat, args.toArray(new Object[0]));
     }
 }

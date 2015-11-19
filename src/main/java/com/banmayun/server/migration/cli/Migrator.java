@@ -321,6 +321,7 @@ public class Migrator {
 		} else {
 			newGroup.setIsActivated(true);
 		}
+		newGroup.setIsPromoted(false);
 		newGroup.setUserCount(0);
 		newGroup.setSource(group.getDomain().equalsIgnoreCase("local") ? com.banmayun.server.migration.to.core.Group.DEFAULT_SOURCE
 				: group.getDomain());

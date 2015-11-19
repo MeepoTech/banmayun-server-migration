@@ -21,11 +21,12 @@ public interface GroupDAO {
 
     public int countGroups() throws DAOException;
 
-    public int countGroups(GroupType type) throws DAOException;
+    public int countGroups(GroupType type, Boolean isActivated, Boolean isBlocked, Boolean isPromoted, Boolean isVisible) throws DAOException;
 
     public List<Group> listGroups(int offset, int limit) throws DAOException;
 
-    public List<Group> listGroups(GroupType type, int offset, int limit) throws DAOException;
+    public List<Group> listGroups(GroupType type, Boolean isActivated, Boolean isBlocked, Boolean isPromoted, Boolean isVisible, int offset, int limit)
+            throws DAOException;
 
     public List<Group> topGroupsByUserCount(int offset, int limit) throws DAOException;
 
@@ -36,4 +37,8 @@ public interface GroupDAO {
     public Optional<Group> updateGroup(long groupId, Group group) throws UniqueViolationException, DAOException;
 
     public Optional<Group> deleteGroup(long groupId) throws DAOException;
+    
+    public Optional<Group> setIsPromoted(long groupId, boolean isPromoted) throws DAOException;
+
+    public Optional<Group> markGroupAsDeleted(long groupId) throws DAOException;
 }

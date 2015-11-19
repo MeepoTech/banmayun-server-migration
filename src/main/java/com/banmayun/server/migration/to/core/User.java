@@ -25,6 +25,7 @@ public class User implements Cloneable {
     private Long rootId = null;
     private Timestamp createdAt = null;
     private Integer groupCount = null;
+    private Boolean isDeleted = null;
 
     public Long getId() {
         return this.id;
@@ -128,6 +129,14 @@ public class User implements Cloneable {
 
     public void setGroupCount(Integer groupCount) {
         this.groupCount = groupCount;
+    }
+    
+    public Boolean getIsDeleted() {
+        return this.isDeleted;
+    }
+    
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     @Override

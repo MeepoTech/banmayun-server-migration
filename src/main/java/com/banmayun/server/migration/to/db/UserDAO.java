@@ -23,11 +23,12 @@ public interface UserDAO {
 
     public int countUsers() throws DAOException;
 
-    public int countUsers(UserRole role) throws DAOException;
+    public int countUsers(UserRole role, Boolean isActivated, Boolean isBlocked) throws DAOException;
 
     public List<User> listUsers(int offset, int limit) throws DAOException;
 
-    public List<User> listUsers(UserRole role, int offset, int limit) throws DAOException;
+    public List<User> listUsers(UserRole role, Boolean isActivated, Boolean isBlocked, int offset, int limit)
+            throws DAOException;
 
     public List<User> topUsersByGroupCount(int offset, int limit) throws DAOException;
 
@@ -36,4 +37,8 @@ public interface UserDAO {
     public List<Pair<User, Root>> topUsersByByteCount(int offset, int limit) throws DAOException;
 
     public Optional<User> updateUser(long userId, User user) throws UniqueViolationException, DAOException;
+
+    public Optional<User> deleteUser(long userId) throws DAOException;
+
+    public Optional<User> markUserAsDeleted(long userId) throws DAOException;
 }
