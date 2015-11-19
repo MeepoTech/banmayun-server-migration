@@ -2,6 +2,7 @@ package com.banmayun.server.migration.cli;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,8 @@ public class Migrator {
 	private com.banmayun.server.migration.to.db.ShareDAO shareDAO = null;
 	private com.banmayun.server.migration.to.db.StatisticGroupDAO statisticGroupDAO = null;
 	private com.banmayun.server.migration.to.db.StatisticSummaryDAO statisticSummaryDAO = null;
+	
+	private com.banmayun.server.migration.to.core.User rootUser = null;
 
 	public static final char[] TRUE_CHARS = new char[] { 'i', 'r', 'w', 'd',
 			'i', 'r', 'w', 'd' };
@@ -122,7 +125,6 @@ public class Migrator {
 			this.migrateStatistic();
 			this.migrateDatas();
 			this.migrateSpaces();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -153,6 +155,9 @@ public class Migrator {
 				break;
 			}
 		}
+		
+		this.rootUser = this.userDAO.findUserByName("root", com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE).orNull();
+		System.out.println("Root User: " + rootUser.getId());
 	}
 
 	private void migrateOneUser(User user) throws Exception {
@@ -465,12 +470,15 @@ public class Migrator {
 			}
 
 			System.out.println("Migrate Datas: " + datas.size());
+			List<com.banmayun.server.migration.to.core.Data> newDatas = new ArrayList<com.banmayun.server.migration.to.core.Data>();
 			for (Data data : datas) {
 				com.banmayun.server.migration.to.core.Data newData = new com.banmayun.server.migration.to.core.Data();
 				newData.setBytes(data.getBytes());
 				newData.setLocation(data.getLocation());
 				newData.setMD5(data.getMD5());
 				newData.setRefCount(data.getRefs());
+				newDatas.add(newData);
+				
 
 				TransactionManager tm = DAOManager.getInstance()
 						.getTransactionManager();
@@ -662,7 +670,7 @@ public class Migrator {
 			for (Share share : shares) {
 				com.banmayun.server.migration.to.core.Share newShare = new com.banmayun.server.migration.to.core.Share();
 				newShare.setCreatedAt(share.getCreated());
-				newShare.setCreatedBy(this.userIds.get(share.getCreatedBy()));
+				newShare.setCreatedBy(this.userIds.get(share.getCreatedBy()) != null ? this.userIds.get(share.getCreatedBy()) : this.rootUser.getId());
 				newShare.setExpiresAt(share.getExpires());
 				newShare.setId(share.getId());
 				newShare.setPasswordSha256(share.getPassword());
@@ -783,7 +791,7 @@ public class Migrator {
 			for (Trash trash : trashes) {
 				com.banmayun.server.migration.to.core.Trash newTrash = new com.banmayun.server.migration.to.core.Trash();
 				newTrash.setCreatedAt(trash.getCreated());
-				newTrash.setCreatedBy(this.userIds.get(trash.getCreatedBy()));
+				newTrash.setCreatedBy(this.userIds.get(trash.getCreatedBy()) != null ? this.userIds.get(trash.getCreatedBy()) : this.rootUser.getId());
 				newTrash.setMetaId(this.metaIds.get(trash.getFileId()));
 				newTrash.setRootId(newRootId);
 				newTrash.setIsDeleted(trash.getIsDeleted());
@@ -841,7 +849,8 @@ public class Migrator {
 				newRevision.setMetaId(this.metaIds.get(revision.getFileId()));
 				newRevision.setModifiedAt(revision.getModified());
 				newRevision.setModifiedBy(this.userIds.get(revision
-						.getModifiedBy()));
+						.getModifiedBy()) != null ? this.userIds.get(revision
+								.getModifiedBy()) : this.rootUser.getId() );
 				newRevision.setRootId(newRootId);
 				newRevision.setVersion(revision.getVersion());
 
@@ -907,11 +916,11 @@ public class Migrator {
 		newMeta.setBytes(meta.getBytes());
 		newMeta.setClientModifiedAt(meta.getClientModified());
 		newMeta.setCreatedAt(meta.getCreated());
-		newMeta.setCreatedBy(this.userIds.get(meta.getCreatedBy()));
+		newMeta.setCreatedBy(this.userIds.get(meta.getCreatedBy()) != null ? this.userIds.get(meta.getCreatedBy()) : this.rootUser.getId());
 		newMeta.setIsDir(meta.getIsDir());
 		newMeta.setMD5(meta.getMD5());
 		newMeta.setModifiedAt(meta.getModified());
-		newMeta.setModifiedBy(this.userIds.get(meta.getModifiedBy()));
+		newMeta.setModifiedBy(this.userIds.get(meta.getModifiedBy()) != null ?  this.userIds.get(meta.getModifiedBy()) : this.rootUser.getId());
 		newMeta.setName(meta.getName());
 		newMeta.setNonce(meta.getNonce());
 		newMeta.setParentPath(meta.getParentPath());

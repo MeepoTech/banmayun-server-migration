@@ -37,11 +37,9 @@ public class MigrationConfiguration extends Configuration {
     @JsonProperty("toDatabase")
     private DatabaseConfiguration toDatabase = new DatabaseConfiguration();
 
-    @NotNull
     @JsonProperty("fromRoot")
     private String fromRoot = null;
 
-    @NotNull
     @JsonProperty("toRoot")
     private String toRoot = null;
 

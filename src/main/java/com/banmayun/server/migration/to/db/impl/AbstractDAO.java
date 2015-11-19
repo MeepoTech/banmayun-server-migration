@@ -37,7 +37,7 @@ public abstract class AbstractDAO {
 
     protected Map<String, Object> uniqueResult(String sql) throws DAOException {
         try {
-            return this.runner.query(this.getConnection(), sql, this.handler);
+        	return this.runner.query(this.getConnection(), sql, this.handler);
         } catch (SQLException e) {
             if (isUniqueViolation(e)) {
                 throw new UniqueViolationException();
@@ -98,6 +98,18 @@ public abstract class AbstractDAO {
     protected int update(String sql, Object... params) throws DAOException {
         try {
             return this.runner.update(this.getConnection(), sql, params);
+        } catch (SQLException e) {
+            if (isUniqueViolation(e)) {
+                throw new UniqueViolationException();
+            } else {
+                throw new DAOException(e);
+            }
+        }
+    }
+    
+    protected int[] batch(String sql, Object[][] params) throws DAOException {
+        try {
+            return this.runner.batch(this.getConnection(), sql, params);
         } catch (SQLException e) {
             if (isUniqueViolation(e)) {
                 throw new UniqueViolationException();

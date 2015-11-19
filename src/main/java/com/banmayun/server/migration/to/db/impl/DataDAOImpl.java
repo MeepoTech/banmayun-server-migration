@@ -61,7 +61,23 @@ public class DataDAOImpl extends AbstractDAO implements DataDAO {
                 COLUMNS_INSERT, COLUMNS_RETURN);
         return parseDataObject(super.uniqueResult(sql, data.getMD5(), data.getBytes(), data.getLocation()));
     }
-
+    
+    @Override
+    public void batchInsertDatas(List<Data> datas) throws UniqueViolationException, DAOException {
+        String sql = String.format("INSERT INTO %1$s (%2$s) VALUES (?, ?, ?) ", TABLE_NAME,
+                COLUMNS_INSERT);
+        Object[][] params = new Object[datas.size()][3];
+        int count = 0;
+        for (Data data : datas) {
+        	params[count][0] = data.getMD5();
+        	params[count][1] = data.getBytes();
+        	params[count][2] = data.getLocation();
+        	count ++;
+        }
+        super.batch(sql, params);
+    }
+    
+    
     @Override
     public Optional<Data> getData(String md5, long bytes) throws DAOException {
         String sql = String.format("SELECT %3$s FROM %1$s %2$s WHERE %2$s.md5=? AND %2$s.bytes=?", TABLE_NAME,

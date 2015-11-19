@@ -14,4 +14,7 @@ public interface DataDAO {
     public Optional<Data> deleteOrphanData(String md5, long bytes) throws DAOException;
 
     public List<Data> deleteOrphanData() throws DAOException;
+
+	public void batchInsertDatas(List<Data> datas) throws UniqueViolationException,
+			DAOException;
 }
