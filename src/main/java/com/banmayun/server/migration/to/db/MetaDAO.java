@@ -76,4 +76,6 @@ public interface MetaDAO {
     public List<Meta> deltaAfterVersion(long rootId, long version, int offset, int limit) throws DAOException;
 
     public void setVersionInitValue() throws DAOException;
+
+	public int countForRoot(long rootId) throws DAOException;
 }

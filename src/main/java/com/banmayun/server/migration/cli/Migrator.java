@@ -264,7 +264,7 @@ public class Migrator {
 			try {
 				conn = DAOFactory.getInstance().getConnection();
 				GroupDAO groupDAO = DAOFactory.getInstance().getGroupDAO(conn);
-				groups = groupDAO.list(offset, LIST_LIMIT);
+				groups = groupDAO.listIgnoreVisible(offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -598,7 +598,7 @@ public class Migrator {
 			try {
 				conn = DAOFactory.getInstance().getConnection();
 				GroupDAO groupDAO = DAOFactory.getInstance().getGroupDAO(conn);
-				groups = groupDAO.list(offset, LIST_LIMIT);
+				groups = groupDAO.listIgnoreVisible(offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -882,10 +882,26 @@ public class Migrator {
 
 	private void migrateOneSapceMetas(Long groupId, Long newRootId)
 			throws Exception {
-		System.out.println("Migrate Metas:  id = " + groupId);
+		
+		
+		long metaCount = 0;
+		Connection conn = null;
+		try {
+			conn = DAOFactory.getInstance().getConnection();
+			MetaDAO metaDAO = DAOFactory.getInstance().getMetaDAO(conn);
+			metaCount = metaDAO.countByGroup(groupId, groupId);
+			DbUtils.commitAndCloseQuietly(conn);
+		} catch (SQLException e) {
+			DbUtils.rollbackAndCloseQuietly(conn);
+			throw e;
+		}
+		
+		System.out.println("Migrate Metas: id = " + groupId + ",  metaSize=" + metaCount);
+		
+		
 		int offset = 0;
 		while (true) {
-			Connection conn = null;
+			conn = null;
 			List<Meta> metas = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
@@ -907,6 +923,26 @@ public class Migrator {
 			if (metas.size() < LIST_LIMIT) {
 				break;
 			}
+		}
+		
+		long migratedMetaCount = 0;
+		TransactionManager tm = DAOManager.getInstance()
+				.getTransactionManager();
+		try {
+			tm.start();
+			migratedMetaCount = this.metaDAO.countForRoot(newRootId);
+			tm.commit();
+		} catch (UniqueViolationException e) {
+			tm.rollback();
+		} catch (Exception e) {
+			tm.rollback();
+			throw e;
+		} finally {
+			tm.close();
+		}
+		
+		if (metaCount != migratedMetaCount) {
+			System.out.println("Migrate Error: wrong meta size: "  + metaCount + "  -> " +  migratedMetaCount);
 		}
 	}
 

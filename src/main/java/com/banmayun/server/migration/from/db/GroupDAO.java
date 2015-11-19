@@ -139,6 +139,11 @@ public class GroupDAO extends AbstractDAO {
     public List<Group> list(int offset, int limit) throws SQLException {
         return this.list(null, true, offset, limit);
     }
+    
+    public List<Group> listIgnoreVisible(int offset, int limit) throws SQLException {
+        String sql = "SELECT " + COLUMNS_SELECT + " FROM tbl_group g ORDER BY g.created DESC OFFSET ? LIMIT ?";
+        return parseGroups(super.list(sql, offset, limit));
+    }
 
     public List<Group> list(Filter[] filters, boolean visibleOnly, int offset, int limit) throws SQLException {
         String sql = "SELECT " + COLUMNS_SELECT + " FROM tbl_group g " + getFilterWhereClause(filters, visibleOnly)

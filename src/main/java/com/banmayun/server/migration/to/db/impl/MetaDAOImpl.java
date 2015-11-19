@@ -194,6 +194,14 @@ public class MetaDAOImpl extends AbstractDAO implements MetaDAO {
                 TABLE_NAME, TABLE_ALIAS, COLUMNS_SELECT);
         return Optional.fromNullable(parseMeta(super.uniqueResult(sql, rootId, metaId, Meta.DEFAULT_NONCE)));
     }
+    
+    @Override
+    public int countForRoot(long rootId) throws DAOException {
+        String sql = String.format("SELECT COUNT(*) AS count FROM %1$s %2$s WHERE %2$s.root_id=? ",
+                TABLE_NAME, TABLE_ALIAS);
+        Map<String, Object> ret = super.uniqueResult(sql, rootId);
+        return ((Long) ret.get("count")).intValue();
+    }
 
     @Override
     public int countMetas() throws DAOException {

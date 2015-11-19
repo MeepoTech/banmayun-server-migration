@@ -140,6 +140,12 @@ public class MetaDAO extends AbstractDAO {
                 + " FROM tbl_meta m WHERE m.group_id=? AND m.root_id=? ORDER BY m.version, m.file_id DESC OFFSET ? LIMIT ?";
         return parseMetas(super.list(sql, groupId, rootId, offset, limit));
     }
+    
+    public int countByGroup(long groupId, long rootId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM tbl_meta m where m.group_id=? AND m.root_id=?";
+        Map<String, Object> ret = super.uniqueResult(sql, groupId, rootId);
+        return ((Long) ret.get("count")).intValue();
+    }
 
     public int count() throws SQLException {
         String sql = "SELECT COUNT(*) FROM tbl_meta m where m.nonce = 0";
