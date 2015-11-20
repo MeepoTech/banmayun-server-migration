@@ -645,8 +645,9 @@ public class Migrator {
 		this.migrateOneSapceMetas(groupId, newRootId);
 		this.migrateOneSapceRevisions(groupId, newRootId);
 		this.migrateOneSpaceTrashes(groupId, newRootId);
-		this.mirgrateOneSpaceCursors(groupId, newRootId);
 		this.mirgrateOneSpaceShares(groupId, newRootId);
+		// don't need migrate cursor any more
+		//this.mirgrateOneSpaceCursors(groupId, newRootId);
 	}
 
 	private void mirgrateOneSpaceShares(Long groupId, Long newRootId)
