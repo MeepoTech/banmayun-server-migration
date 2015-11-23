@@ -29,6 +29,7 @@ public class Group implements Cloneable {
     private Integer userCount = null;
     private Boolean isPromoted = null;
     private Boolean isDeleted = null;
+    private Integer membersCanOwn = null;
 
     public Long getId() {
         return this.id;
@@ -156,6 +157,14 @@ public class Group implements Cloneable {
 
     public void setIsDeleted(Boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+    
+    public Integer getMembersCanOwn() {
+    	return this.membersCanOwn;
+    }
+    
+    public void setMembersCanOwn(Integer membersCanOwn) {
+    	this.membersCanOwn = membersCanOwn;
     }
 
     @Override

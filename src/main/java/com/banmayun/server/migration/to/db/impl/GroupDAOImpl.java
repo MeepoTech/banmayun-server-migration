@@ -25,7 +25,7 @@ public class GroupDAOImpl extends AbstractDAO implements GroupDAO {
     protected static final String TABLE_NAME = "groups";
     protected static final String TABLE_ALIAS = "_group_";
     protected static final String[] COLUMN_NAMES = new String[] { "id", "name", "source", "intro", "tags", "type",
-            "is_visible", "is_activated", "is_blocked", "announce", "root_id", "created_at", "created_by", "is_promoted", "user_count", "is_deleted"};
+            "is_visible", "is_activated", "is_blocked", "announce", "root_id", "created_at", "created_by", "is_promoted", "members_can_own", "user_count", "is_deleted"};
     protected static final String[] COLUMN_ALIASES;
     protected static final String COLUMNS_INSERT;
     protected static final String COLUMNS_SELECT;
@@ -61,8 +61,9 @@ public class GroupDAOImpl extends AbstractDAO implements GroupDAO {
         ret.setCreatedAt((Timestamp) arg.get(COLUMN_ALIASES[11]));
         ret.setCreatedBy((Long) arg.get(COLUMN_ALIASES[12]));
         ret.setIsPromoted((Boolean) arg.get(COLUMN_ALIASES[13]));
-        ret.setUserCount((Integer) arg.get(COLUMN_ALIASES[14]));
-        ret.setIsDeleted((Boolean) arg.get(COLUMN_ALIASES[15]));
+        ret.setMembersCanOwn((Integer) arg.get(COLUMN_ALIASES[14]));
+        ret.setUserCount((Integer) arg.get(COLUMN_ALIASES[15]));
+        ret.setIsDeleted((Boolean) arg.get(COLUMN_ALIASES[16]));
         return ret;
     }
 
@@ -93,12 +94,12 @@ public class GroupDAOImpl extends AbstractDAO implements GroupDAO {
     @Override
     public Group createGroup(Group group) throws UniqueViolationException, DAOException {
         String sql = String.format("INSERT INTO %1$s (%2$s) VALUES "
-                + "(?, ?, ?, ?, ?::group_type, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING %3$s", TABLE_NAME, COLUMNS_INSERT,
+                + "(?, ?, ?, ?, ?::group_type, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING %3$s", TABLE_NAME, COLUMNS_INSERT,
                 COLUMNS_RETURN);
         return parseGroup(super.uniqueResult(sql, group.getName(), group.getSource(), group.getIntro(),
                 group.getTags(), group.getType().toString(), group.getIsVisible(), group.getIsActivated(),
                 group.getIsBlocked(), group.getAnnounce(), group.getRootId(), group.getCreatedAt(),
-                group.getCreatedBy(), group.getIsPromoted()));
+                group.getCreatedBy(), group.getIsPromoted(), group.getMembersCanOwn()));
     }
 
     @Override
@@ -186,7 +187,7 @@ public class GroupDAOImpl extends AbstractDAO implements GroupDAO {
         return Optional.fromNullable(parseGroup(super.uniqueResult(sql, group.getName(), group.getSource(),
                 group.getIntro(), group.getTags(), group.getType().toString(), group.getIsVisible(),
                 group.getIsActivated(), group.getIsBlocked(), group.getAnnounce(), group.getRootId(),
-                group.getCreatedAt(), group.getCreatedBy(), group.getIsPromoted(), groupId)));
+                group.getCreatedAt(), group.getCreatedBy(), group.getIsPromoted(), group.getMembersCanOwn(), groupId)));
     }
     
     @Override

@@ -23,118 +23,122 @@ import java.sql.Timestamp;
 
 public class Group implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public enum Type {
-        SYSTEM_PUBLIC,
-        PUBLIC,
-        PROTECTED,
-        PRIVATE
-    }
+	public enum Type {
+		SYSTEM_PUBLIC, PUBLIC, PROTECTED, PRIVATE
+	}
 
-    public enum Status {
-        NOT_ACTIVATED,
-        BLOCKED,
-        NORMAL
-    }
+	public enum Status {
+		NOT_ACTIVATED, BLOCKED, NORMAL
+	}
 
-    protected Long id = null;
-    protected String name = null;
-    protected String intro = null;
-    protected String tags = null;
-    protected Type type = null;
-    protected Boolean isVisible = null;
-    protected Status status = null;
-    protected String announce = null;
-    protected Timestamp created = null;
-    protected Long createdBy = null;
-    protected String domain = null;
+	protected Long id = null;
+	protected String name = null;
+	protected String intro = null;
+	protected String tags = null;
+	protected Type type = null;
+	protected Boolean isVisible = null;
+	protected Status status = null;
+	protected String announce = null;
+	protected Timestamp created = null;
+	protected Long createdBy = null;
+	protected String domain = null;
+	protected Integer membersCanOwn = null;
 
-    public Long getId() {
-        return this.id;
-    }
+	public Long getId() {
+		return this.id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getIntro() {
-        return this.intro;
-    }
+	public String getIntro() {
+		return this.intro;
+	}
 
-    public void setIntro(String intro) {
-        this.intro = intro;
-    }
+	public void setIntro(String intro) {
+		this.intro = intro;
+	}
 
-    public String getTags() {
-        return this.tags;
-    }
+	public String getTags() {
+		return this.tags;
+	}
 
-    public void setTags(String tags) {
-        this.tags = tags;
-    }
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
 
-    public Type getType() {
-        return this.type;
-    }
+	public Type getType() {
+		return this.type;
+	}
 
-    public void setType(Type type) {
-        this.type = type;
-    }
+	public void setType(Type type) {
+		this.type = type;
+	}
 
-    public Boolean getIsVisible() {
-        return this.isVisible;
-    }
+	public Boolean getIsVisible() {
+		return this.isVisible;
+	}
 
-    public void setIsVisible(Boolean isVisible) {
-        this.isVisible = isVisible;
-    }
+	public void setIsVisible(Boolean isVisible) {
+		this.isVisible = isVisible;
+	}
 
-    public Status getStatus() {
-        return this.status;
-    }
+	public Status getStatus() {
+		return this.status;
+	}
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+	public void setStatus(Status status) {
+		this.status = status;
+	}
 
-    public String getAnnounce() {
-        return this.announce;
-    }
+	public String getAnnounce() {
+		return this.announce;
+	}
 
-    public void setAnnounce(String announcement) {
-        this.announce = announcement;
-    }
+	public void setAnnounce(String announcement) {
+		this.announce = announcement;
+	}
 
-    public Timestamp getCreated() {
-        return this.created;
-    }
+	public Timestamp getCreated() {
+		return this.created;
+	}
 
-    public void setCreated(Timestamp created) {
-        this.created = created;
-    }
+	public void setCreated(Timestamp created) {
+		this.created = created;
+	}
 
-    public Long getCreatedBy() {
-        return this.createdBy;
-    }
+	public Long getCreatedBy() {
+		return this.createdBy;
+	}
 
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
-    }
+	public void setCreatedBy(Long createdBy) {
+		this.createdBy = createdBy;
+	}
 
-    public String getDomain() {
-        return this.domain;
-    }
+	public String getDomain() {
+		return this.domain;
+	}
 
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
+
+	public Integer getMembersCanOwn() {
+		return this.membersCanOwn;
+	}
+
+	public void setMembersCanOwn(Integer membersCanOwn) {
+		this.membersCanOwn = membersCanOwn;
+	}
 }

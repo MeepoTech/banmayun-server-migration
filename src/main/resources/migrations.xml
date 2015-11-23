@@ -771,13 +771,16 @@
 		<dropIndex indexName="idx_group_name_source" tableName="groups" />
 
 		<sql endDelimiter="\nGO" splitStatements="true" stripComments="true">
-			create unique index idx_users_name_source on users(lower(name),
-			lower(source)) where is_deleted=false;
-			create unique index idx_users_email_source on users(lower(email),
-			lower(source)) where is_deleted=false;
-			create unique index idx_groups_name_source on groups(lower(name),
-			lower(source)) where is_deleted=false;
+	  	    create unique index idx_users_name_source on users(lower(name), lower(source)) where is_deleted=false;
+	  	    create unique index idx_users_email_source on users(lower(email), lower(source)) where is_deleted=false;
+	  	    create unique index idx_groups_name_source on groups(lower(name), lower(source)) where is_deleted=false;
 		</sql>
+	</changeSet>
+
+	<changeSet id="2.4.6" author="shengli">
+		<addColumn tableName="groups">
+			<column name="members_can_own" type="integer" defaultValue="0" />
+		</addColumn>
 	</changeSet>
 
 </databaseChangeLog>

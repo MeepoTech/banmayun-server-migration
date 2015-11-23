@@ -38,7 +38,7 @@ import com.google.common.base.Optional;
 public class GroupDAO extends AbstractDAO {
     public static final String DEFAULT_DOMAIN = "local";
     protected static final String[] COLUMN_NAMES = new String[] { "id", "name", "intro", "tags", "type", "is_visible",
-            "status", "announce", "created", "created_by", "domain" };
+            "status", "announce", "created", "created_by", "domain", "members_can_own"};
     protected static final String[] COLUMN_ALIASES;
     protected static String COLUMNS_INSERT;
     protected static String COLUMNS_RETURN;
@@ -72,6 +72,7 @@ public class GroupDAO extends AbstractDAO {
         ret.setCreated((Timestamp) arg.get(COLUMN_ALIASES[8]));
         ret.setCreatedBy((Long) arg.get(COLUMN_ALIASES[9]));
         ret.setDomain((String) arg.get(COLUMN_ALIASES[10]));
+		ret.setMembersCanOwn((Integer) arg.get(COLUMN_ALIASES[11]));
         return ret;
     }
 
@@ -91,7 +92,7 @@ public class GroupDAO extends AbstractDAO {
         ret.setCreated((Timestamp) arg.get(COLUMN_ALIASES[8]));
         ret.setCreatedBy((Long) arg.get(COLUMN_ALIASES[9]));
         ret.setDomain((String) arg.get(COLUMN_ALIASES[10]));
-
+    	ret.setMembersCanOwn((Integer) arg.get(COLUMN_ALIASES[11]));
         return ret;
     }
 
@@ -109,10 +110,10 @@ public class GroupDAO extends AbstractDAO {
 
     public Group create(Group group) throws SQLException {
         String sql = "INSERT INTO tbl_group (" + COLUMNS_INSERT + ") "
-                + "VALUES (?, ?, ?, ?::group_type, ?, ?::group_status, ?, ?, ?, ?) " + "RETURNING " + COLUMNS_RETURN;
+                + "VALUES (?, ?, ?, ?::group_type, ?, ?::group_status, ?, ?, ?, ?， ？) " + "RETURNING " + COLUMNS_RETURN;
         return parseGroup(super.uniqueResult(sql, group.getName(), group.getIntro(), group.getTags(), group.getType()
                 .toString().toLowerCase(), group.getIsVisible(), group.getStatus().toString().toLowerCase(),
-                group.getAnnounce(), group.getCreated(), group.getCreatedBy(), group.getDomain()));
+                group.getAnnounce(), group.getCreated(), group.getCreatedBy(), group.getDomain(), group.getMembersCanOwn()));
     }
 
     public Optional<Group> get(long id) throws SQLException {
@@ -293,7 +294,8 @@ public class GroupDAO extends AbstractDAO {
                         .toLowerCase(), update.getAnnounce() == null ? group.getAnnounce() : update.getAnnounce(),
                 update.getCreated() == null ? group.getCreated() : update.getCreated(),
                 update.getCreatedBy() == null ? group.getCreatedBy() : update.getCreatedBy(),
-                update.getDomain() == null ? group.getDomain() : update.getDomain(), id)));
+                update.getDomain() == null ? group.getDomain() : update.getDomain(),
+                update.getMembersCanOwn() == null ? group.getMembersCanOwn() : update.getMembersCanOwn(), id)));
     }
 
     public Optional<Group> delete(long id) throws SQLException {
