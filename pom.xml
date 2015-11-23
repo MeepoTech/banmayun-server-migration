@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.banmayun.server</groupId>
 	<artifactId>server-migration</artifactId>
-	<version>2.0.0a46</version>
+	<version>2.0.0a47</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
