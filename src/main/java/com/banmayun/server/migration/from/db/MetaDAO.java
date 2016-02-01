@@ -389,4 +389,16 @@ public class MetaDAO extends AbstractDAO {
                 + "(SELECT 1 FROM tbl_data d WHERE d.md5=s.md5 AND d.bytes=s.bytes))";
         return super.list(sql);
     }
+    
+    public int countValidMetasForValidUsers() throws SQLException {
+    	String sql = "SELECT count(*) FROM tbl_meta m INNER JOIN tbl_user u ON m.root_id=u.id";
+    	Map<String, Object> ret = super.uniqueResult(sql);
+    	return ((Long)ret.get("count")).intValue();
+    }
+    
+    public int countValidMetasForValidGroups() throws SQLException {
+    	String sql = "SELECT count(*) FROM tbl_meta m INNER JOIN tbl_group g ON m.root_id=g.id";
+    	Map<String, Object> ret = super.uniqueResult(sql);
+    	return ((Long)ret.get("count")).intValue();
+    }
 }

@@ -72,41 +72,29 @@ public class Migrator {
 	private com.banmayun.server.migration.to.db.ShareDAO shareDAO = null;
 	private com.banmayun.server.migration.to.db.StatisticGroupDAO statisticGroupDAO = null;
 	private com.banmayun.server.migration.to.db.StatisticSummaryDAO statisticSummaryDAO = null;
-	
+
 	private com.banmayun.server.migration.to.core.User rootUser = null;
 
-	public static final char[] TRUE_CHARS = new char[] { 'i', 'r', 'w', 'd',
-			'i', 'r', 'w', 'd' };
+	public static final char[] TRUE_CHARS = new char[] { 'i', 'r', 'w', 'd', 'i', 'r', 'w', 'd' };
 	public static final char FALSE_CHAR = '-';
 
 	public Migrator(MigrationConfiguration config) {
 		this.config = config;
-		this.rootDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.RootDAO.class);
-		this.groupDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.GroupDAO.class);
-		this.userDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.UserDAO.class);
-		this.relationDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.RelationDAO.class);
-		this.dataDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.DataDAO.class);
-		this.linkDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.LinkDAO.class);
-		this.metaDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.MetaDAO.class);
-		this.revisionDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.RevisionDAO.class);
-		this.trashDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.TrashDAO.class);
-		this.cursorDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.CursorDAO.class);
-		this.shareDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.ShareDAO.class);
-		this.statisticGroupDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.StatisticGroupDAO.class);
-		this.statisticSummaryDAO = DAOManager.getInstance().getDAO(
-				com.banmayun.server.migration.to.db.StatisticSummaryDAO.class);
+		this.rootDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.RootDAO.class);
+		this.groupDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.GroupDAO.class);
+		this.userDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.UserDAO.class);
+		this.relationDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.RelationDAO.class);
+		this.dataDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.DataDAO.class);
+		this.linkDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.LinkDAO.class);
+		this.metaDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.MetaDAO.class);
+		this.revisionDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.RevisionDAO.class);
+		this.trashDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.TrashDAO.class);
+		this.cursorDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.CursorDAO.class);
+		this.shareDAO = DAOManager.getInstance().getDAO(com.banmayun.server.migration.to.db.ShareDAO.class);
+		this.statisticGroupDAO = DAOManager.getInstance()
+				.getDAO(com.banmayun.server.migration.to.db.StatisticGroupDAO.class);
+		this.statisticSummaryDAO = DAOManager.getInstance()
+				.getDAO(com.banmayun.server.migration.to.db.StatisticSummaryDAO.class);
 
 		this.userIds = new HashMap<Long, Long>();
 		this.groupIds = new HashMap<Long, Long>();
@@ -125,6 +113,7 @@ public class Migrator {
 			this.migrateStatistic();
 			this.migrateDatas();
 			this.migrateSpaces();
+			this.checkItemsCountAfterMigration();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -155,8 +144,9 @@ public class Migrator {
 				break;
 			}
 		}
-		
-		this.rootUser = this.userDAO.findUserByName("root", com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE).orNull();
+
+		this.rootUser = this.userDAO.findUserByName("root", com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE)
+				.orNull();
 		System.out.println("Root User: " + rootUser.getId());
 	}
 
@@ -175,15 +165,14 @@ public class Migrator {
 			newUser.setIsBlocked(false);
 		}
 		newUser.setIsActivated(true);
-		newUser.setSource(user.getDomain().equalsIgnoreCase("local") ? com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE
-				: user.getDomain());
+		newUser.setSource(user.getDomain().equalsIgnoreCase("local")
+				? com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE : user.getDomain());
 
 		Connection conn = null;
 		Statistic stat = null;
 		try {
 			conn = DAOFactory.getInstance().getConnection();
-			StatisticDAO statDAO = DAOFactory.getInstance().getStatisticDAO(
-					conn);
+			StatisticDAO statDAO = DAOFactory.getInstance().getStatisticDAO(conn);
 			stat = statDAO.get(user.getId(), user.getId()).orNull();
 			DbUtils.commitAndCloseQuietly(conn);
 		} catch (SQLException e) {
@@ -209,8 +198,7 @@ public class Migrator {
 		root.setQuota(stat.getQuota());
 		root.setDefaultPermission(this.config.getGroupDefaultPermission());
 
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		com.banmayun.server.migration.to.core.Root createdRoot = null;
 		com.banmayun.server.migration.to.core.User createdUser = null;
 		try {
@@ -222,14 +210,10 @@ public class Migrator {
 			} catch (UniqueViolationException e) {
 				tm.rollback();
 				createdUser = this.userDAO
-						.findUserByName(
-								newUser.getName(),
-								com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE)
-						.orNull();
+						.findUserByName(newUser.getName(), com.banmayun.server.migration.to.core.User.DEFAULT_SOURCE).orNull();
 				createdRoot = this.rootDAO.getRoot(createdUser.getRootId()).orNull();
 			}
-			System.out.println("U: " + user.getId() + " -> "
-					+ createdUser.getId() + " rootId=" + createdRoot.getId());
+			System.out.println("U: " + user.getId() + " -> " + createdUser.getId() + " rootId=" + createdRoot.getId());
 			this.userIds.put(user.getId(), createdUser.getId());
 			this.userRootIds.put(user.getId(), createdRoot.getId());
 			tm.commit();
@@ -324,15 +308,14 @@ public class Migrator {
 		newGroup.setIsPromoted(false);
 		newGroup.setMembersCanOwn(group.getMembersCanOwn());
 		newGroup.setUserCount(0);
-		newGroup.setSource(group.getDomain().equalsIgnoreCase("local") ? com.banmayun.server.migration.to.core.Group.DEFAULT_SOURCE
-				: group.getDomain());
+		newGroup.setSource(group.getDomain().equalsIgnoreCase("local")
+				? com.banmayun.server.migration.to.core.Group.DEFAULT_SOURCE : group.getDomain());
 
 		Connection conn = null;
 		Statistic stat = null;
 		try {
 			conn = DAOFactory.getInstance().getConnection();
-			StatisticDAO statDAO = DAOFactory.getInstance().getStatisticDAO(
-					conn);
+			StatisticDAO statDAO = DAOFactory.getInstance().getStatisticDAO(conn);
 			stat = statDAO.get(group.getId(), group.getId()).orNull();
 			DbUtils.commitAndCloseQuietly(conn);
 		} catch (SQLException e) {
@@ -341,8 +324,7 @@ public class Migrator {
 		}
 
 		if (stat == null) {
-			System.out.println("Group without Statistic: group_id = "
-					+ group.getId());
+			System.out.println("Group without Statistic: group_id = " + group.getId());
 			return;
 		}
 
@@ -352,18 +334,13 @@ public class Migrator {
 		root.setQuota(stat.getQuota());
 		root.setDefaultPermission(this.config.getGroupDefaultPermission());
 
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		try {
 			tm.start();
-			com.banmayun.server.migration.to.core.Root createdRoot = this.rootDAO
-					.createRoot(root);
+			com.banmayun.server.migration.to.core.Root createdRoot = this.rootDAO.createRoot(root);
 			newGroup.setRootId(createdRoot.getId());
-			com.banmayun.server.migration.to.core.Group createdGroup = this.groupDAO
-					.createGroup(newGroup);
-			System.out.println("G: " + group.getId() + " -> "
-					+ createdGroup.getId() + "  rootId = "
-					+ createdRoot.getId());
+			com.banmayun.server.migration.to.core.Group createdGroup = this.groupDAO.createGroup(newGroup);
+			System.out.println("G: " + group.getId() + " -> " + createdGroup.getId() + "  rootId = " + createdRoot.getId());
 			this.groupIds.put(group.getId(), createdGroup.getId());
 			this.groupRootIds.put(group.getId(), createdRoot.getId());
 			tm.commit();
@@ -382,8 +359,7 @@ public class Migrator {
 			List<Relation> relations = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				RelationDAO relationDAO = DAOFactory.getInstance()
-						.getRelationDAO(conn);
+				RelationDAO relationDAO = DAOFactory.getInstance().getRelationDAO(conn);
 				relations = relationDAO.list(offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
@@ -434,17 +410,13 @@ public class Migrator {
 			return;
 		}
 
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		try {
 			tm.start();
 
-			com.banmayun.server.migration.to.core.Relation createdRelation = this.relationDAO
-					.createRelation(newRelation);
-			System.out.println("R: (" + relation.getGroupId() + ","
-					+ relation.getUserId() + ")  -> ("
-					+ createdRelation.getGroupId() + ","
-					+ createdRelation.getUserId() + ")");
+			com.banmayun.server.migration.to.core.Relation createdRelation = this.relationDAO.createRelation(newRelation);
+			System.out.println("R: (" + relation.getGroupId() + "," + relation.getUserId() + ")  -> ("
+					+ createdRelation.getGroupId() + "," + createdRelation.getUserId() + ")");
 
 			tm.commit();
 		} catch (Exception e) {
@@ -480,10 +452,8 @@ public class Migrator {
 				newData.setMD5(data.getMD5());
 				newData.setRefCount(data.getRefs());
 				newDatas.add(newData);
-				
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.dataDAO.createData(newData);
@@ -522,8 +492,7 @@ public class Migrator {
 				com.banmayun.server.migration.to.core.Link newLink = new com.banmayun.server.migration.to.core.Link();
 				newLink.setName(link.getName());
 				newLink.setToken(link.getToken());
-				newLink.setDevice(LinkDevice.valueOf(link.getDevice()
-						.toString()));
+				newLink.setDevice(LinkDevice.valueOf(link.getDevice().toString()));
 				newLink.setCreatedAt(link.getCreated());
 				newLink.setExpiresAt(link.getExpires());
 				newLink.setUserId(this.userIds.get(link.getOwnerId()));
@@ -541,8 +510,7 @@ public class Migrator {
 					throw new RuntimeException();
 				}
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.linkDAO.createLink(newLink);
@@ -578,12 +546,9 @@ public class Migrator {
 
 			System.out.println("Migrate User Spaces: " + users.size());
 			for (User user : users) {
-				System.out
-						.println("Migrate User Space:  id = " + user.getId()
-								+ ", newRootId = "
-								+ this.userRootIds.get(user.getId()));
-				this.migrateOneSpace(user.getId(),
-						this.userRootIds.get(user.getId()));
+				System.out.println(
+						"Migrate User Space:  id = " + user.getId() + ", newRootId = " + this.userRootIds.get(user.getId()));
+				this.migrateOneSpace(user.getId(), this.userRootIds.get(user.getId()));
 			}
 
 			offset += users.size();
@@ -608,11 +573,9 @@ public class Migrator {
 
 			System.out.println("Migrate Groups: " + groups.size());
 			for (Group group : groups) {
-				System.out.println("Migrate Group Space:  id = "
-						+ group.getId() + ", newRootId = "
-						+ this.groupRootIds.get(group.getId()));
-				this.migrateOneSpace(group.getId(),
-						this.groupRootIds.get(group.getId()));
+				System.out.println(
+						"Migrate Group Space:  id = " + group.getId() + ", newRootId = " + this.groupRootIds.get(group.getId()));
+				this.migrateOneSpace(group.getId(), this.groupRootIds.get(group.getId()));
 			}
 
 			offset += groups.size();
@@ -625,8 +588,7 @@ public class Migrator {
 	}
 
 	private void setSeqInitValue() throws Exception {
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		try {
 			tm.start();
 			this.cursorDAO.setIdInitValue();
@@ -648,11 +610,10 @@ public class Migrator {
 		this.migrateOneSpaceTrashes(groupId, newRootId);
 		this.mirgrateOneSpaceShares(groupId, newRootId);
 		// don't need migrate cursor any more
-		//this.mirgrateOneSpaceCursors(groupId, newRootId);
+		// this.mirgrateOneSpaceCursors(groupId, newRootId);
 	}
 
-	private void mirgrateOneSpaceShares(Long groupId, Long newRootId)
-			throws Exception {
+	private void mirgrateOneSpaceShares(Long groupId, Long newRootId) throws Exception {
 		System.out.println("Migrate Shares:  id = " + groupId);
 		int offset = 0;
 		while (true) {
@@ -661,8 +622,7 @@ public class Migrator {
 			try {
 				conn = DAOFactory.getInstance().getConnection();
 				ShareDAO shareDAO = DAOFactory.getInstance().getShareDAO(conn);
-				shares = shareDAO.listByRoot(groupId, groupId, offset,
-						LIST_LIMIT);
+				shares = shareDAO.listByRoot(groupId, groupId, offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -673,7 +633,8 @@ public class Migrator {
 			for (Share share : shares) {
 				com.banmayun.server.migration.to.core.Share newShare = new com.banmayun.server.migration.to.core.Share();
 				newShare.setCreatedAt(share.getCreated());
-				newShare.setCreatedBy(this.userIds.get(share.getCreatedBy()) != null ? this.userIds.get(share.getCreatedBy()) : this.rootUser.getId());
+				newShare.setCreatedBy(this.userIds.get(share.getCreatedBy()) != null ? this.userIds.get(share.getCreatedBy())
+						: this.rootUser.getId());
 				newShare.setExpiresAt(share.getExpires());
 				newShare.setId(share.getId());
 				newShare.setPasswordSha256(share.getPassword());
@@ -684,8 +645,7 @@ public class Migrator {
 				try {
 					conn = DAOFactory.getInstance().getConnection();
 					MetaDAO metaDAO = DAOFactory.getInstance().getMetaDAO(conn);
-					meta = metaDAO.getByPath(groupId, groupId, share.getPath())
-							.orNull();
+					meta = metaDAO.getByPath(groupId, groupId, share.getPath()).orNull();
 					DbUtils.commitAndCloseQuietly(conn);
 				} catch (SQLException e) {
 					DbUtils.rollbackAndCloseQuietly(conn);
@@ -700,8 +660,7 @@ public class Migrator {
 					continue;
 				}
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.shareDAO.createShare(newShare);
@@ -721,8 +680,7 @@ public class Migrator {
 		}
 	}
 
-	private void mirgrateOneSpaceCursors(Long groupId, Long newRootId)
-			throws Exception {
+	private void mirgrateOneSpaceCursors(Long groupId, Long newRootId) throws Exception {
 		System.out.println("Migrate Cursors:  id = " + groupId);
 		int offset = 0;
 		while (true) {
@@ -730,8 +688,7 @@ public class Migrator {
 			List<Cursor> cursors = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				CursorDAO cursorDAO = DAOFactory.getInstance().getCursorDAO(
-						conn);
+				CursorDAO cursorDAO = DAOFactory.getInstance().getCursorDAO(conn);
 				cursors = cursorDAO.listByGroupId(groupId, offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
@@ -750,8 +707,7 @@ public class Migrator {
 				newCursor.setRootId(newRootId);
 				newCursor.setVersion(cursor.getVersion());
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.cursorDAO.createCursor(newCursor);
@@ -773,8 +729,7 @@ public class Migrator {
 		}
 	}
 
-	private void migrateOneSpaceTrashes(Long groupId, Long newRootId)
-			throws Exception {
+	private void migrateOneSpaceTrashes(Long groupId, Long newRootId) throws Exception {
 		System.out.println("Migrate Trashes:  id = " + groupId);
 		int offset = 0;
 		while (true) {
@@ -794,7 +749,8 @@ public class Migrator {
 			for (Trash trash : trashes) {
 				com.banmayun.server.migration.to.core.Trash newTrash = new com.banmayun.server.migration.to.core.Trash();
 				newTrash.setCreatedAt(trash.getCreated());
-				newTrash.setCreatedBy(this.userIds.get(trash.getCreatedBy()) != null ? this.userIds.get(trash.getCreatedBy()) : this.rootUser.getId());
+				newTrash.setCreatedBy(this.userIds.get(trash.getCreatedBy()) != null ? this.userIds.get(trash.getCreatedBy())
+						: this.rootUser.getId());
 				newTrash.setMetaId(this.metaIds.get(trash.getFileId()));
 				newTrash.setRootId(newRootId);
 				newTrash.setIsDeleted(trash.getIsDeleted());
@@ -803,8 +759,7 @@ public class Migrator {
 					continue;
 				}
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.trashDAO.createTrash(newTrash);
@@ -824,8 +779,7 @@ public class Migrator {
 		}
 	}
 
-	private void migrateOneSapceRevisions(Long groupId, Long newRootId)
-			throws Exception {
+	private void migrateOneSapceRevisions(Long groupId, Long newRootId) throws Exception {
 		System.out.println("Migrate Revisons:  id = " + groupId);
 		int offset = 0;
 		while (true) {
@@ -833,10 +787,8 @@ public class Migrator {
 			List<Revision> revisions = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				RevisionDAO revisionDAO = DAOFactory.getInstance()
-						.getRevisionDAO(conn);
-				revisions = revisionDAO.listByGroupId(groupId, offset,
-						LIST_LIMIT);
+				RevisionDAO revisionDAO = DAOFactory.getInstance().getRevisionDAO(conn);
+				revisions = revisionDAO.listByGroupId(groupId, offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -851,9 +803,8 @@ public class Migrator {
 				newRevision.setMD5(revision.getMD5());
 				newRevision.setMetaId(this.metaIds.get(revision.getFileId()));
 				newRevision.setModifiedAt(revision.getModified());
-				newRevision.setModifiedBy(this.userIds.get(revision
-						.getModifiedBy()) != null ? this.userIds.get(revision
-								.getModifiedBy()) : this.rootUser.getId() );
+				newRevision.setModifiedBy(this.userIds.get(revision.getModifiedBy()) != null
+						? this.userIds.get(revision.getModifiedBy()) : this.rootUser.getId());
 				newRevision.setRootId(newRootId);
 				newRevision.setVersion(revision.getVersion());
 
@@ -861,8 +812,7 @@ public class Migrator {
 					continue;
 				}
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.revisionDAO.createRevision(newRevision);
@@ -882,10 +832,8 @@ public class Migrator {
 		}
 	}
 
-	private void migrateOneSapceMetas(Long groupId, Long newRootId)
-			throws Exception {
-		
-		
+	private void migrateOneSapceMetas(Long groupId, Long newRootId) throws Exception {
+
 		long metaCount = 0;
 		Connection conn = null;
 		try {
@@ -897,10 +845,9 @@ public class Migrator {
 			DbUtils.rollbackAndCloseQuietly(conn);
 			throw e;
 		}
-		
+
 		System.out.println("Migrate Metas: id = " + groupId + ",  metaSize=" + metaCount);
-		
-		
+
 		int offset = 0;
 		while (true) {
 			conn = null;
@@ -908,8 +855,7 @@ public class Migrator {
 			try {
 				conn = DAOFactory.getInstance().getConnection();
 				MetaDAO metaDAO = DAOFactory.getInstance().getMetaDAO(conn);
-				metas = metaDAO.listByGroup(groupId, groupId, offset,
-						LIST_LIMIT);
+				metas = metaDAO.listByGroup(groupId, groupId, offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -926,10 +872,9 @@ public class Migrator {
 				break;
 			}
 		}
-		
+
 		long migratedMetaCount = 0;
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		try {
 			tm.start();
 			migratedMetaCount = this.metaDAO.countForRoot(newRootId);
@@ -942,9 +887,9 @@ public class Migrator {
 		} finally {
 			tm.close();
 		}
-		
+
 		if (metaCount != migratedMetaCount) {
-			System.out.println("Migrate Error: wrong meta size: "  + metaCount + "  -> " +  migratedMetaCount);
+			System.out.println("Migrate Error: wrong meta size: " + metaCount + "  -> " + migratedMetaCount);
 		}
 	}
 
@@ -955,29 +900,28 @@ public class Migrator {
 		newMeta.setBytes(meta.getBytes());
 		newMeta.setClientModifiedAt(meta.getClientModified());
 		newMeta.setCreatedAt(meta.getCreated());
-		newMeta.setCreatedBy(this.userIds.get(meta.getCreatedBy()) != null ? this.userIds.get(meta.getCreatedBy()) : this.rootUser.getId());
+		newMeta.setCreatedBy(
+				this.userIds.get(meta.getCreatedBy()) != null ? this.userIds.get(meta.getCreatedBy()) : this.rootUser.getId());
 		newMeta.setIsDir(meta.getIsDir());
 		newMeta.setMD5(meta.getMD5());
 		newMeta.setModifiedAt(meta.getModified());
-		newMeta.setModifiedBy(this.userIds.get(meta.getModifiedBy()) != null ?  this.userIds.get(meta.getModifiedBy()) : this.rootUser.getId());
+		newMeta.setModifiedBy(this.userIds.get(meta.getModifiedBy()) != null ? this.userIds.get(meta.getModifiedBy())
+				: this.rootUser.getId());
 		newMeta.setName(meta.getName());
 		newMeta.setNonce(meta.getNonce());
 		newMeta.setParentPath(meta.getParentPath());
 		newMeta.setPath(meta.getPath());
 		newMeta.setVersion(meta.getVersion());
 
-		if (!PathUtils.getTopLevelPath(meta.getPath()).equalsIgnoreCase(
-				meta.getPath())) {
+		if (!PathUtils.getTopLevelPath(meta.getPath()).equalsIgnoreCase(meta.getPath())) {
 			newMeta.setPermission(null);
 		} else {
 			Connection conn = null;
 			Permission perm = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				PermissionDAO permDAO = DAOFactory.getInstance()
-						.getPermissionDAO(conn);
-				perm = permDAO.getByPath(meta.getGroupId(), meta.getGroupId(),
-						meta.getPath()).orNull();
+				PermissionDAO permDAO = DAOFactory.getInstance().getPermissionDAO(conn);
+				perm = permDAO.getByPath(meta.getGroupId(), meta.getGroupId(), meta.getPath()).orNull();
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
@@ -989,12 +933,10 @@ public class Migrator {
 				newMeta.setPermission(migratePermisson(perm));
 			}
 		}
-		TransactionManager tm = DAOManager.getInstance()
-				.getTransactionManager();
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 		try {
 			tm.start();
-			com.banmayun.server.migration.to.core.Meta createdMeta = this.metaDAO
-					.createMeta(newMeta);
+			com.banmayun.server.migration.to.core.Meta createdMeta = this.metaDAO.createMeta(newMeta);
 			this.metaIds.put(meta.getFileId(), createdMeta.getId());
 			tm.commit();
 		} catch (UniqueViolationException e) {
@@ -1009,10 +951,8 @@ public class Migrator {
 
 	private String migratePermisson(Permission perm) {
 		StringBuilder sb = new StringBuilder();
-		Boolean[] fields = new Boolean[] { perm.getCanCreate(),
-				perm.getCanOwnerRead(), perm.getCanOwnerWrite(),
-				perm.getCanOwnerDelete(), perm.getCanCreate(),
-				perm.getCanOthersRead(), perm.getCanOthersWrite(),
+		Boolean[] fields = new Boolean[] { perm.getCanCreate(), perm.getCanOwnerRead(), perm.getCanOwnerWrite(),
+				perm.getCanOwnerDelete(), perm.getCanCreate(), perm.getCanOthersRead(), perm.getCanOthersWrite(),
 				perm.getCanOthersDelete() };
 		for (int i = 0; i < fields.length; i++) {
 			if (fields[i] != null && fields[i]) {
@@ -1036,8 +976,7 @@ public class Migrator {
 			List<GroupStatistic> groupStatistics = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				GroupStatisticDAO groupStatisticDAO = DAOFactory.getInstance()
-						.getGroupStatisticDAO(conn);
+				GroupStatisticDAO groupStatisticDAO = DAOFactory.getInstance().getGroupStatisticDAO(conn);
 				groupStatistics = groupStatisticDAO.list(offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
@@ -1045,8 +984,7 @@ public class Migrator {
 				throw e;
 			}
 
-			System.out.println("Migrate GroupStatistic: "
-					+ groupStatistics.size());
+			System.out.println("Migrate GroupStatistic: " + groupStatistics.size());
 			for (GroupStatistic gs : groupStatistics) {
 				com.banmayun.server.migration.to.core.StatisticGroup newGs = new com.banmayun.server.migration.to.core.StatisticGroup();
 				newGs.setGroupId(gs.getGroupId());
@@ -1057,8 +995,7 @@ public class Migrator {
 				newGs.setUserCount(gs.getUserCount());
 				newGs.setIsPersonalSpace(gs.getIsPersonalSpace());
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.statisticGroupDAO.create(newGs);
@@ -1084,18 +1021,15 @@ public class Migrator {
 			List<SummaryStatistic> summaryStatistics = null;
 			try {
 				conn = DAOFactory.getInstance().getConnection();
-				SummaryStatisticDAO summaryStatisticDAO = DAOFactory
-						.getInstance().getSummaryStatisticDAO(conn);
-				summaryStatistics = summaryStatisticDAO
-						.list(offset, LIST_LIMIT);
+				SummaryStatisticDAO summaryStatisticDAO = DAOFactory.getInstance().getSummaryStatisticDAO(conn);
+				summaryStatistics = summaryStatisticDAO.list(offset, LIST_LIMIT);
 				DbUtils.commitAndCloseQuietly(conn);
 			} catch (SQLException e) {
 				DbUtils.rollbackAndCloseQuietly(conn);
 				throw e;
 			}
 
-			System.out.println("Migrate SummaryStatistic: "
-					+ summaryStatistics.size());
+			System.out.println("Migrate SummaryStatistic: " + summaryStatistics.size());
 			for (SummaryStatistic ss : summaryStatistics) {
 				com.banmayun.server.migration.to.core.StatisticSummary newSs = new com.banmayun.server.migration.to.core.StatisticSummary();
 				newSs.setDate(ss.getDate());
@@ -1106,8 +1040,7 @@ public class Migrator {
 				newSs.setMetaCount(ss.getMetaCount());
 				newSs.setUserCount(ss.getUserCount());
 
-				TransactionManager tm = DAOManager.getInstance()
-						.getTransactionManager();
+				TransactionManager tm = DAOManager.getInstance().getTransactionManager();
 				try {
 					tm.start();
 					this.statisticSummaryDAO.create(newSs);
@@ -1123,6 +1056,125 @@ public class Migrator {
 			if (summaryStatistics.size() < LIST_LIMIT) {
 				break;
 			}
+		}
+	}
+
+	private void checkItemsCountAfterMigration() throws Exception {
+		this.checkUsersCount();
+		this.checkGroupsCount();
+		this.CheckMetasCount();
+	}
+
+	private void checkUsersCount() throws Exception {
+		Connection conn = null;
+		int originalUserCount = -1;
+		try {
+			conn = DAOFactory.getInstance().getConnection();
+			UserDAO userDAO = DAOFactory.getInstance().getUserDAO(conn);
+			originalUserCount = userDAO.count();
+			DbUtils.commitAndCloseQuietly(conn);
+		} catch (SQLException e) {
+			DbUtils.rollbackAndCloseQuietly(conn);
+			throw e;
+		}
+
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
+		int newUserCount = -1;
+		try {
+			tm.start();
+			newUserCount = this.userDAO.countUsers();
+			tm.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			tm.rollback();
+		} finally {
+			tm.close();
+		}
+
+		if (originalUserCount < 0 || newUserCount < 0) {
+			System.out.println("Cannot check users count for some error occured!");
+		} else if (originalUserCount != newUserCount) {
+			System.out.println("Users count not equal. Users count before migration is: " + originalUserCount
+					+ ", and Users count after migration is: " + newUserCount);
+		} else {
+			System.out.println("Users count equals. Users count is: " + newUserCount);
+		}
+	}
+
+	private void checkGroupsCount() throws Exception {
+		Connection conn = null;
+		int originalGroupsCount = -1;
+		try {
+			conn = DAOFactory.getInstance().getConnection();
+			GroupDAO groupDAO = DAOFactory.getInstance().getGroupDAO(conn);
+			originalGroupsCount = groupDAO.count();
+			DbUtils.commitAndCloseQuietly(conn);
+		} catch (SQLException e) {
+			DbUtils.rollbackAndCloseQuietly(conn);
+			throw e;
+		}
+
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
+		int newGroupsCount = -1;
+		try {
+			tm.start();
+			newGroupsCount = this.groupDAO.countGroups();
+			tm.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			tm.rollback();
+		} finally {
+			tm.close();
+		}
+
+		if (originalGroupsCount < 0 || newGroupsCount < 0) {
+			System.out.println("Cannot check groups count for some error occured!");
+		} else if (originalGroupsCount != newGroupsCount) {
+			System.out.println("Groups count not equal. Groups count before migration is: " + originalGroupsCount
+					+ ", and groups count after migration is: " + newGroupsCount);
+		} else {
+			System.out.println("Groups count equals. Groups count is: " + newGroupsCount);
+		}
+	}
+
+	private void CheckMetasCount() throws Exception {
+		Connection conn = null;
+		int originalValidMetasCountForUsers = -1;
+		int originalValidMetasCountForGroups = -1;
+		try {
+			conn = DAOFactory.getInstance().getConnection();
+			MetaDAO metaDAO = DAOFactory.getInstance().getMetaDAO(conn);
+			originalValidMetasCountForUsers = metaDAO.countValidMetasForValidUsers();
+			originalValidMetasCountForGroups = metaDAO.countValidMetasForValidGroups();
+			DbUtils.commitAndCloseQuietly(conn);
+		} catch (SQLException e) {
+			DbUtils.rollbackAndCloseQuietly(conn);
+			throw e;
+		}
+
+		TransactionManager tm = DAOManager.getInstance().getTransactionManager();
+		int newMetasCount = -1;
+		try {
+			tm.start();
+			newMetasCount = this.metaDAO.countMetas();
+			tm.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			tm.rollback();
+		} finally {
+			tm.close();
+		}
+
+		if (originalValidMetasCountForUsers < 0 || originalValidMetasCountForGroups < 0 || newMetasCount < 0) {
+			System.out.println("Cannot check metas count for some error occured!");
+		} else if (originalValidMetasCountForUsers + originalValidMetasCountForGroups != newMetasCount) {
+			System.out.println("Metas count not equal. Valid metas count for users before migration is: "
+					+ originalValidMetasCountForUsers + ", valid metas count for groups before migration is: "
+					+ originalValidMetasCountForGroups + ", metas count after migration is: " + newMetasCount);
+		} else {
+			System.out.println("Metas count equals. Valid metas count for users before migration is: "
+					+ originalValidMetasCountForUsers + ", valid metas count for groups before migration is: "
+					+ originalValidMetasCountForGroups + ", metas count after migration is: " + newMetasCount);
 		}
 	}
 }
