@@ -213,7 +213,7 @@ public class MetaDAOImpl extends AbstractDAO implements MetaDAO {
     
     @Override
     public int countAllMetas() throws DAOException {
-    	String sql = String.format("SELECT COUNT(*) AS count FROM %1$ %2$", TABLE_NAME, TABLE_ALIAS);
+    	String sql = String.format("SELECT COUNT(*) AS count FROM %1$s %2$s", TABLE_NAME, TABLE_ALIAS);
     	Map<String, Object> ret = super.uniqueResult(sql);
     	return ((Long) ret.get("count")).intValue();
     }
