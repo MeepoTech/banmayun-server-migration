@@ -107,13 +107,15 @@ public class Migrator {
 		try {
 
 			this.migrateUsers();
+			this.checkUsersCount();
 			this.migrateGroups();
+			this.checkGroupsCount();
 			this.migrateRelations();
 			this.migrateLinks();
 			this.migrateStatistic();
 			this.migrateDatas();
 			this.migrateSpaces();
-			this.checkItemsCountAfterMigration();
+			this.checkMetasCount();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -890,6 +892,7 @@ public class Migrator {
 
 		if (metaCount != migratedMetaCount) {
 			System.out.println("Migrate Error: wrong meta size: " + metaCount + "  -> " + migratedMetaCount);
+			throw new Exception("Migrate Error for migrating space: " + groupId);
 		}
 	}
 
@@ -1059,12 +1062,6 @@ public class Migrator {
 		}
 	}
 
-	private void checkItemsCountAfterMigration() throws Exception {
-		this.checkUsersCount();
-		this.checkGroupsCount();
-		this.CheckMetasCount();
-	}
-
 	private void checkUsersCount() throws Exception {
 		Connection conn = null;
 		int originalUserCount = -1;
@@ -1093,9 +1090,11 @@ public class Migrator {
 
 		if (originalUserCount < 0 || newUserCount < 0) {
 			System.out.println("Cannot check users count for some error occured!");
+			throw new Exception("Cannot check users count for some error reason!");
 		} else if (originalUserCount != newUserCount) {
 			System.out.println("Users count not equal. Users count before migration is: " + originalUserCount
 					+ ", and Users count after migration is: " + newUserCount);
+			throw new Exception("Users count not equal!");
 		} else {
 			System.out.println("Users count equals. Users count is: " + newUserCount);
 		}
@@ -1129,15 +1128,17 @@ public class Migrator {
 
 		if (originalGroupsCount < 0 || newGroupsCount < 0) {
 			System.out.println("Cannot check groups count for some error occured!");
+			throw new Exception("Cannot check groups count for some error reason!");
 		} else if (originalGroupsCount != newGroupsCount) {
 			System.out.println("Groups count not equal. Groups count before migration is: " + originalGroupsCount
 					+ ", and groups count after migration is: " + newGroupsCount);
+			throw new Exception("Groups count not equal!");
 		} else {
 			System.out.println("Groups count equals. Groups count is: " + newGroupsCount);
 		}
 	}
-
-	private void CheckMetasCount() throws Exception {
+	
+	private void checkMetasCount() throws Exception {
 		Connection conn = null;
 		int originalValidMetasCountForUsers = -1;
 		int originalValidMetasCountForGroups = -1;
@@ -1156,7 +1157,7 @@ public class Migrator {
 		int newMetasCount = -1;
 		try {
 			tm.start();
-			newMetasCount = this.metaDAO.countMetas();
+			newMetasCount = this.metaDAO.countAllMetas();
 			tm.commit();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1167,10 +1168,12 @@ public class Migrator {
 
 		if (originalValidMetasCountForUsers < 0 || originalValidMetasCountForGroups < 0 || newMetasCount < 0) {
 			System.out.println("Cannot check metas count for some error occured!");
+			throw new Exception("Cannot check metas count for some error reason!");
 		} else if (originalValidMetasCountForUsers + originalValidMetasCountForGroups != newMetasCount) {
 			System.out.println("Metas count not equal. Valid metas count for users before migration is: "
 					+ originalValidMetasCountForUsers + ", valid metas count for groups before migration is: "
 					+ originalValidMetasCountForGroups + ", metas count after migration is: " + newMetasCount);
+			throw new Exception("Metas count not equal!");
 		} else {
 			System.out.println("Metas count equals. Valid metas count for users before migration is: "
 					+ originalValidMetasCountForUsers + ", valid metas count for groups before migration is: "

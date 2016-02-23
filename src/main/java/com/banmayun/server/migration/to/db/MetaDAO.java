@@ -16,6 +16,8 @@ public interface MetaDAO {
     public Optional<Meta> getMeta(long rootId, long metaId) throws DAOException;
 
     public int countMetas() throws DAOException;
+    
+    public int countAllMetas() throws DAOException;
 
     public int countMetasForRoot(long rootId) throws DAOException;
 
